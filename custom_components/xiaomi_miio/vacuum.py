@@ -7,6 +7,7 @@ from typing import Any, override
 from miio import DeviceException
 
 from homeassistant.components.vacuum import (
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
@@ -327,9 +328,46 @@ class MiroboVacuum(
         except (OSError, DeviceException) as exc:
             _LOGGER.error("Unable to send zoned_clean command to the vacuum: %s", exc)
 
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the rooms (segments) of the current map."""
+        rooms = await self.hass.async_add_executor_job(
+            self._device.get_room_mapping  # type: ignore[attr-defined]
+        )
+        return [
+            Segment(id=str(room_id), name=str(name) or str(room_id))
+            for room_id, name in rooms
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified rooms (segments)."""
+        await self.async_clean_segment([int(segment_id) for segment_id in segment_ids])
+
+    @callback
+    def _async_check_segments_changed(self, rooms: list[tuple[int, str]]) -> None:
+        """Create a repair issue if the rooms differ from the mapped segments."""
+        if (
+            self.registry_entry is None
+            or (last_seen := self.last_seen_segments) is None
+        ):
+            return
+        if {str(room_id) for room_id, _ in rooms} != {
+            segment.id for segment in last_seen
+        }:
+            self.async_create_segments_issue()
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
+        # Offer CLEAN_AREA once the device reported rooms and keep it, so a
+        # failed fetch or a reset map raises a repair issue instead.
+        rooms = self.coordinator.data.rooms
+        if rooms:
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
+        if rooms is not None:
+            self._async_check_segments_changed(rooms)
+
         state_code = int(self.coordinator.data.status.state_code)
         if state_code not in STATE_CODE_TO_STATE:
             _LOGGER.error(

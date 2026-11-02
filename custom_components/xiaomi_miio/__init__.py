@@ -227,6 +227,7 @@ class VacuumCoordinatorData:
     timers: list[Timer]
     fan_speeds: dict[str, int]
     fan_speeds_reverse: dict[int, str]
+    rooms: list[tuple[int, str]] | None = None
 
 
 @dataclass(init=False, frozen=True)
@@ -248,6 +249,7 @@ class VacuumCoordinatorDataAttributes:
     timer: str = "timer"
     fan_speeds: str = "fan_speeds"
     fan_speeds_reverse: str = "fan_speeds_reverse"
+    rooms: str = "rooms"
 
 
 def _async_update_data_vacuum(
@@ -267,6 +269,16 @@ def _async_update_data_vacuum(
 
         fan_speeds = device.fan_speed_presets()
 
+        # Room mapping is only available on models and firmwares that support
+        # segment cleaning, None marks a device without it.
+        rooms = None
+        try:
+            rooms = [(int(room[0]), str(room[1])) for room in device.get_room_mapping()]
+        except DeviceException as ex:
+            _LOGGER.debug(
+                "Unable to fetch room mapping, this may happen on some devices: %s", ex
+            )
+
         return VacuumCoordinatorData(
             device.status(),
             device.dnd_status(),
@@ -276,6 +288,7 @@ def _async_update_data_vacuum(
             timer,
             fan_speeds,
             {v: k for k, v in fan_speeds.items()},
+            rooms,
         )
 
     async def update_async() -> VacuumCoordinatorData:

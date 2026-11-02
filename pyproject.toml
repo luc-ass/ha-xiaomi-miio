@@ -25,3 +25,16 @@ target-version = "py314"
 
 [tool.uv]
 package = false
+
+[tool.ruff.lint]
+# Nur Fehler und Importe: Die Core-Dateien sollen unverändert durchgehen
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.isort]
+# Wie im Home-Assistant-Core, damit Core-Dateien unverändert durchgehen
+force-sort-within-sections = true
+known-first-party = ["homeassistant", "tests"]
+known-third-party = ["syrupy", "pytest", "probatio", "pylint"]
+forced-separate = ["tests"]
+combine-as-imports = true
+split-on-trailing-comma = false
