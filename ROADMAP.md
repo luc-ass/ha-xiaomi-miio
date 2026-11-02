@@ -7,6 +7,10 @@ Nur Offenes. Erledigtes steht im `CHANGELOG.md`.
 - [ ] Reparaturmeldung bei geänderter Karte im echten Betrieb prüfen (beim S5 greift sie nur für eingetragene Räume, er meldet selbst keine)
 - [ ] GitHub-Release mit Versionsnummer anlegen, damit HACS Updates anzeigt (installiert ist bisher der Stand von `main`)
 
+## Pflege
+
+- [ ] Dependabot meldet 41 Warnungen (2026-11-02), vermutlich nur Test-Abhängigkeiten in `uv.lock` (HA-Testpaket). Prüfen, ggf. Dependabot auf `custom_components` beschränken
+
 ## Core-PR
 
 - [ ] Abfrage von `get_room_mapping` bei jeder Aktualisierung: zu häufig? Alternative: nur beim Start und nach jeder Reinigung
