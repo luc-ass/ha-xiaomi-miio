@@ -1,0 +1,27 @@
+[project]
+name = "ha-xiaomi-miio"
+version = "0.1.0"
+description = "Core xiaomi_miio integration with clean-by-area support for Roborock vacuums"
+requires-python = ">=3.14.2"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest-homeassistant-custom-component==0.13.375",
+    "python-miio==0.5.12",
+    "micloud==0.5",
+    "construct==2.10.68",
+    "ruff",
+    "arrow",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.uv]
+package = false

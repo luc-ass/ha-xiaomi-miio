@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Zugangsdaten und Mitschnitte (nie committen)
+.env
+mitschnitte/
+
+# Editoren, macOS
+.vscode/
+.idea/
+.DS_Store
