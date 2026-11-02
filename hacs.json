@@ -1,0 +1,6 @@
+{
+  "name": "Xiaomi Miio (clean by area)",
+  "content_in_root": false,
+  "render_readme": true,
+  "homeassistant": "2026.10.4"
+}
