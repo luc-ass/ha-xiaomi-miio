@@ -316,12 +316,17 @@
     },
     "options": {
         "error": {
-            "cloud_credentials_incomplete": "Anmeldedaten unvollst\u00e4ndig, bitte Benutzernamen, Passwort und Serverregion eingeben"
+            "cloud_credentials_incomplete": "Anmeldedaten unvollst\u00e4ndig, bitte Benutzernamen, Passwort und Serverregion eingeben",
+            "invalid_rooms": "Ung\u00fcltige R\u00e4ume, bitte je Zeile einen Raum als `Segment-ID: Name` ohne doppelte IDs angeben"
         },
         "step": {
             "init": {
                 "data": {
-                    "cloud_subdevices": "Xiaomi Home-Dienst verwenden, um verbundene Unterger\u00e4te abzurufen"
+                    "cloud_subdevices": "Xiaomi Home-Dienst verwenden, um verbundene Unterger\u00e4te abzurufen",
+                    "rooms": "R\u00e4ume"
+                },
+                "data_description": {
+                    "rooms": "Nur n\u00f6tig, wenn der Sauger seine R\u00e4ume nicht meldet (z. B. Roborock S5). Ein Raum je Zeile als `Segment-ID: Name`, die Segment-IDs beginnen bei 16."
                 }
             }
         }

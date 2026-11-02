@@ -316,12 +316,17 @@
     },
     "options": {
         "error": {
-            "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region"
+            "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region",
+            "invalid_rooms": "Invalid rooms, use one line per room as `segment id: name` without duplicate ids"
         },
         "step": {
             "init": {
                 "data": {
-                    "cloud_subdevices": "Use Xiaomi Home service to get connected subdevices"
+                    "cloud_subdevices": "Use Xiaomi Home service to get connected subdevices",
+                    "rooms": "Rooms"
+                },
+                "data_description": {
+                    "rooms": "Only needed if the vacuum doesn't report its rooms (e.g. Roborock S5). One room per line as `segment id: name`, segment ids start at 16."
                 }
             }
         }

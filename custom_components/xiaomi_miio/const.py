@@ -26,6 +26,7 @@ CONF_MANUAL = "manual"
 
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
+CONF_ROOMS = "rooms"
 
 # Status
 SUCCESS = ["ok"]

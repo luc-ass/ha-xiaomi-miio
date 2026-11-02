@@ -9,6 +9,6 @@
   "issue_tracker": "https://github.com/luc-ass/ha-xiaomi-miio/issues",
   "loggers": ["micloud", "miio"],
   "requirements": ["construct>=2.10.68", "micloud>=0.5", "python-miio>=0.5.12"],
-  "version": "0.1.0",
+  "version": "0.2.0",
   "zeroconf": ["_miio._udp.local."]
 }

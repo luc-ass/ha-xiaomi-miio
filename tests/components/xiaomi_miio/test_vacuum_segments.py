@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
+    CONF_ROOMS,
     DOMAIN,
     MODELS_VACUUM,
 )
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import TEST_MAC
@@ -57,7 +59,9 @@ def mock_vacuum_fixture() -> Generator[MagicMock]:
         yield mock_vacuum
 
 
-async def setup_vacuum(hass: HomeAssistant) -> None:
+async def setup_vacuum(
+    hass: HomeAssistant, options: dict | None = None
+) -> MockConfigEntry:
     """Set up the vacuum config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -70,10 +74,12 @@ async def setup_vacuum(hass: HomeAssistant) -> None:
             CONF_MODEL: MODELS_VACUUM[0],
             CONF_MAC: TEST_MAC,
         },
+        options=options or {},
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    return config_entry
 
 
 def supported_features(hass: HomeAssistant) -> VacuumEntityFeature:
@@ -206,3 +212,91 @@ async def test_segments_changed_issue(
     issue = next(iter(issue_registry.issues.values()))
     assert issue.domain == VACUUM_DOMAIN
     assert issue.translation_key == "segments_changed"
+
+
+async def test_configured_rooms_fallback(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_vacuum: MagicMock,
+) -> None:
+    """Test configured rooms are used when the vacuum reports none."""
+    mock_vacuum.get_room_mapping.return_value = []
+    await setup_vacuum(hass, {CONF_ROOMS: {"16": "Schlafzimmer", "17": "17"}})
+
+    assert VacuumEntityFeature.CLEAN_AREA in supported_features(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["result"]["segments"] == [
+        {"id": "16", "name": "Schlafzimmer", "group": None},
+        {"id": "17", "name": "17", "group": None},
+    ]
+
+    entity_registry.async_update_entity_options(
+        ENTITY_ID, VACUUM_DOMAIN, {"area_mapping": {"schlafzimmer": ["16"]}}
+    )
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["schlafzimmer"]},
+        blocking=True,
+    )
+    mock_vacuum.segment_clean.assert_called_once_with(segments=[16])
+
+
+async def test_reported_rooms_take_precedence(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_vacuum: MagicMock,
+) -> None:
+    """Test rooms reported by the vacuum win over configured rooms."""
+    await setup_vacuum(hass, {CONF_ROOMS: {"20": "Alt"}})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert [segment["id"] for segment in msg["result"]["segments"]] == ["16", "17"]
+
+
+async def test_options_flow_rooms(hass: HomeAssistant, mock_vacuum: MagicMock) -> None:
+    """Test configuring rooms in the options flow."""
+    config_entry = await setup_vacuum(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_ROOMS in result["data_schema"].schema
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ROOMS: "16: Schlafzimmer\n\n17 : Flur OG\n18"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_ROOMS] == {
+        "16": "Schlafzimmer",
+        "17": "Flur OG",
+        "18": "18",
+    }
+
+
+@pytest.mark.parametrize(
+    "rooms", ["Schlafzimmer", "16: Schlafzimmer\n16: Flur"], ids=["no_id", "duplicate"]
+)
+async def test_options_flow_invalid_rooms(
+    hass: HomeAssistant, mock_vacuum: MagicMock, rooms: str
+) -> None:
+    """Test invalid rooms are rejected in the options flow."""
+    config_entry = await setup_vacuum(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_ROOMS: rooms}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_ROOMS: "invalid_rooms"}
+    assert CONF_ROOMS not in config_entry.options

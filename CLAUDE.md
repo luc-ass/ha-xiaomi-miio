@@ -26,6 +26,7 @@ Core-Dateien nur dort ändern, wo die Erweiterung es braucht. Keine Formatierung
 
 ## Erweiterung
 
+- `config_flow.py`, `const.py`, `strings.json`, `translations/`: Option `rooms` für Sauger (`{"16": "Schlafzimmer"}`), Ersatz für Modelle ohne Raumliste wie den S5
 - `__init__.py`: Der Vacuum-Coordinator liest `get_room_mapping`, `VacuumCoordinatorData.rooms` ist `None`, wenn das Gerät es nicht kann.
 - `vacuum.py`: `VacuumEntityFeature.CLEAN_AREA`, sobald Räume gemeldet werden, danach bleibt es gesetzt. `async_get_segments` fragt frisch ab, `async_clean_segments` nutzt `segment_clean`, `_async_check_segments_changed` legt die Reparaturmeldung an.
 - Manifest: `version` und `issue_tracker` (Pflicht für Custom-Integrationen).

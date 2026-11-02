@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from .const import CONF_FLOW_TYPE
+from .const import CONF_FLOW_TYPE, CONF_ROOMS
 from .entity import XiaomiCoordinatedMiioEntity
 from .typing import XiaomiMiioConfigEntry
 
@@ -96,6 +96,20 @@ class MiroboVacuum(
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.START
     )
+
+    def __init__(
+        self,
+        device: Any,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+        coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
+    ) -> None:
+        """Initialize the vacuum, with rooms configured by the user as fallback."""
+        super().__init__(device, entry, unique_id, coordinator)
+        self._configured_rooms = [
+            (int(room_id), name)
+            for room_id, name in entry.options.get(CONF_ROOMS, {}).items()
+        ]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -334,6 +348,8 @@ class MiroboVacuum(
         rooms = await self.hass.async_add_executor_job(
             self._device.get_room_mapping  # type: ignore[attr-defined]
         )
+        # Some models (Roborock S5) don't report rooms, use the configured ones
+        rooms = rooms or self._configured_rooms
         return [
             Segment(id=str(room_id), name=str(name) or str(room_id))
             for room_id, name in rooms
@@ -360,12 +376,14 @@ class MiroboVacuum(
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        # Offer CLEAN_AREA once the device reported rooms and keep it, so a
-        # failed fetch or a reset map raises a repair issue instead.
-        rooms = self.coordinator.data.rooms
+        # Offer CLEAN_AREA once the device reported or the user configured
+        # rooms and keep it, so a failed fetch or a reset map raises a repair
+        # issue instead.
+        reported = self.coordinator.data.rooms
+        rooms = reported or self._configured_rooms
         if rooms:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
-        if rooms is not None:
+        if reported is not None or self._configured_rooms:
             self._async_check_segments_changed(rooms)
 
         state_code = int(self.coordinator.data.status.state_code)

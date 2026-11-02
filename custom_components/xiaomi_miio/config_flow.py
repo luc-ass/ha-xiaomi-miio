@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -27,11 +28,13 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MANUAL,
+    CONF_ROOMS,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
+    MODELS_VACUUM,
     SERVER_COUNTRY_CODES,
     AuthException,
     SetupException,
@@ -66,6 +69,25 @@ CLOUD_STEP_PLACEHOLDERS = {
 }
 
 
+def _parse_rooms(text: str) -> dict[str, str]:
+    """Parse one room per line as "<segment id>: <name>", the name is optional."""
+    rooms: dict[str, str] = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        room_id, _, name = line.partition(":")
+        room_id = room_id.strip()
+        if not room_id.isdigit() or room_id in rooms:
+            raise ValueError(line)
+        rooms[room_id] = name.strip() or room_id
+    return rooms
+
+
+def _format_rooms(rooms: dict[str, str]) -> str:
+    """Format rooms for editing, one per line."""
+    return "\n".join(f"{room_id}: {name}" for room_id, name in rooms.items())
+
+
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
 
@@ -74,7 +96,19 @@ class OptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors = {}
+        is_vacuum = any(
+            self.config_entry.data.get(CONF_MODEL, "").startswith(model)
+            for model in MODELS_VACUUM
+        )
         if user_input is not None:
+            if is_vacuum:
+                try:
+                    user_input[CONF_ROOMS] = _parse_rooms(
+                        user_input.get(CONF_ROOMS, "")
+                    )
+                except ValueError:
+                    errors[CONF_ROOMS] = "invalid_rooms"
+
             use_cloud = user_input.get(CONF_CLOUD_SUBDEVICES, False)
             cloud_username = self.config_entry.data.get(CONF_CLOUD_USERNAME)
             cloud_password = self.config_entry.data.get(CONF_CLOUD_PASSWORD)
@@ -97,6 +131,18 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ): bool
             }
         )
+
+        if is_vacuum:
+            settings_schema = settings_schema.extend(
+                {
+                    probatio.Optional(
+                        CONF_ROOMS,
+                        default=_format_rooms(
+                            self.config_entry.options.get(CONF_ROOMS, {})
+                        ),
+                    ): TextSelector(TextSelectorConfig(multiline=True))
+                }
+            )
 
         return self.async_show_form(
             step_id="init", data_schema=settings_schema, errors=errors
