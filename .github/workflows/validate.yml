@@ -15,6 +15,9 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # Überschreibt die Core-Integration xiaomi_miio, deren Logos stehen
+          # schon im Brands-Repo unter dem Core-Namen
+          ignore: brands
 
   hassfest:
     name: hassfest
