@@ -53,3 +53,4 @@ Befehle, die den Sauger bewegen (`segment_clean`, `app_segment_clean`), hat Luca
 - `segment_clean` nimmt jede ID von 1 bis 31 an (40 lehnt er ab: „data for segment is invalid“). Bei einer ID ohne Raum fährt er nach etwa 5–15 s von selbst zurück, Fläche 0
 - Segmente aus der automatischen Aufteilung haben IDs ab 1, von Hand abgetrennte ab 16. OG: 2 Arbeitszimmer, 3 Badezimmer, 4 Kinderzimmer, 5 Schlafzimmer, 16 Treppe (gesperrt), 17 Flur OG
 - Probefahrten am schnellsten so: Claude schickt ihn los, Lucas sagt den Raum und holt ihn in der App zurück
+- `goto` (und neue Ziele allgemein) nimmt der S5 während einer Fahrt oder Reinigung nicht an, vorher `stop`. Die Position gibt er lokal nicht heraus (kein `get_*pos*`), die Station liegt bei etwa x 25500, y 25500 (mm). Abfalleimer OG: x 21300, y 24200 (`script.sauger_og_abfalleimer` in HA)
