@@ -4,9 +4,8 @@ Nur Offenes. Erledigtes steht im `CHANGELOG.md`.
 
 ## Test am Gerät (Roborock S5)
 
-- [ ] Segment-IDs des OG durch Probefahrten zuordnen (`segment_clean`, ab 16) und in den Optionen eintragen. Befund 2026-11-02: `get_room_mapping` bleibt beim S5 leer, Räume lassen sich in der Xiaomi-App nicht benennen, auch sonst kein lokaler Befehl liefert die Segmente. Segment 16 existiert
-- [ ] In HA installieren (HACS, benutzerdefiniertes Repository), Neustart nur nach OK, Räume den Bereichen zuordnen, `vacuum.clean_area` testen
-- [ ] Reparaturmeldung bei geänderter Karte im echten Betrieb prüfen
+- [ ] Reparaturmeldung bei geänderter Karte im echten Betrieb prüfen (beim S5 greift sie nur für eingetragene Räume, er meldet selbst keine)
+- [ ] GitHub-Release mit Versionsnummer anlegen, damit HACS Updates anzeigt (installiert ist bisher der Stand von `main`)
 
 ## Core-PR
 

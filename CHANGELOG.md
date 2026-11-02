@@ -2,10 +2,11 @@
 
 Versionen dieser Integration, neueste oben. Installation und Änderungen in HA stehen in `ha-organisation/CHANGELOG.md`.
 
-## 0.2.0 (unveröffentlicht)
+## 0.2.0 (2026-11-02, in HA installiert)
 
 - Räume von Hand in den Optionen eintragen (`16: Schlafzimmer`, eine Zeile je Raum), für Sauger, die keine Räume melden (Roborock S5). Meldet das Gerät Räume, haben diese Vorrang
 - Tests für Options-Dialog und eingetragene Räume (68 Tests)
+- Am S5 getestet: `vacuum.clean_area` mit Flur OG fährt in den Flur
 
 ## 0.1.0
 

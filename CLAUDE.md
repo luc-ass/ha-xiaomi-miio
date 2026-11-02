@@ -46,3 +46,10 @@ uv run ruff check custom_components tests conftest.py
 `uv run tools/raumliste.py` liest Modell, Firmware, Kartenspeicher und Raumliste (nur lesend). Zugangsdaten `S5_HOST` und `S5_TOKEN` aus `.env` hier oder aus `../ha-organisation/.env`. Den Token nie ausgeben oder in Dateien schreiben.
 
 Befehle, die den Sauger bewegen (`segment_clean`, `app_segment_clean`), hat Lucas für Tests freigegeben (2026-11-02).
+
+### Befunde am S5 (Firmware 3.5.8, 2026-11-02)
+
+- `get_room_mapping` liefert `[]`, Räume lassen sich in der Xiaomi-App nicht benennen. Kein lokaler Befehl liefert die Segmente, sie stehen nur in der Cloud-Karte
+- `segment_clean` nimmt jede ID von 1 bis 31 an (40 lehnt er ab: „data for segment is invalid“). Bei einer ID ohne Raum fährt er nach etwa 5–15 s von selbst zurück, Fläche 0
+- Segmente aus der automatischen Aufteilung haben IDs ab 1, von Hand abgetrennte ab 16. OG: 2 Arbeitszimmer, 3 Badezimmer, 4 Kinderzimmer, 5 Schlafzimmer, 16 Treppe (gesperrt), 17 Flur OG
+- Probefahrten am schnellsten so: Claude schickt ihn los, Lucas sagt den Raum und holt ihn in der App zurück
